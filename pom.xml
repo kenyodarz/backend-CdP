@@ -143,6 +143,7 @@
             <option>all-open:annotation=jakarta.persistence.MappedSuperclass</option>
             <option>all-open:annotation=jakarta.persistence.Embeddable</option>
           </pluginOptions>
+          <jvmTarget>21</jvmTarget>
         </configuration>
         <dependencies>
           <dependency>
