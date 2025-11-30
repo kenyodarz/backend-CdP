@@ -1,12 +1,17 @@
 package com.castillodelpan.backend.infrastructure.persistence.mappers
 
+import com.castillodelpan.backend.domain.models.enums.TipoTarifa
 import com.castillodelpan.backend.domain.models.producto.Producto
 import com.castillodelpan.backend.infrastructure.persistence.entities.core.CategoriaData
+import com.castillodelpan.backend.infrastructure.persistence.entities.core.PrecioEspecialData
 import com.castillodelpan.backend.infrastructure.persistence.entities.core.ProductoData
 import com.castillodelpan.backend.infrastructure.persistence.entities.core.UnidadMedidaData
 
 object ProductoMapper {
     fun toDomain(data: ProductoData): Producto {
+        // Convertir precios especiales de lista a mapa
+        val preciosEspecialesMap = data.preciosEspeciales.associate { it.tipoTarifa to it.precio }
+
         return Producto(
             idProducto = data.idProducto,
             codigo = data.codigo,
@@ -21,7 +26,8 @@ object ProductoMapper {
             diasVidaUtil = data.diasVidaUtil,
             imagenUrl = data.imagenUrl,
             estado = data.estado,
-            precios = data.precios.map { PrecioProductoMapper.toDomain(it) }.toMutableList()
+            precioBase = data.precioBase,
+            preciosEspeciales = preciosEspecialesMap
         )
     }
 
@@ -30,26 +36,36 @@ object ProductoMapper {
         categoriaData: CategoriaData,
         unidadData: UnidadMedidaData
     ): ProductoData {
-        val productoData = ProductoData(
-            idProducto = domain.idProducto,
-            codigo = domain.codigo,
-            nombre = domain.nombre,
-            descripcion = domain.descripcion,
-            categoria = categoriaData,
-            unidadMedida = unidadData,
-            stockActual = domain.stockActual,
-            stockMinimo = domain.stockMinimo,
-            stockMaximo = domain.stockMaximo,
-            requiereLote = domain.requiereLote,
-            diasVidaUtil = domain.diasVidaUtil,
-            imagenUrl = domain.imagenUrl,
-            estado = domain.estado
-        )
+        val productoData =
+            ProductoData(
+                idProducto = domain.idProducto,
+                codigo = domain.codigo,
+                nombre = domain.nombre,
+                descripcion = domain.descripcion,
+                categoria = categoriaData,
+                unidadMedida = unidadData,
+                stockActual = domain.stockActual,
+                stockMinimo = domain.stockMinimo,
+                stockMaximo = domain.stockMaximo,
+                requiereLote = domain.requiereLote,
+                diasVidaUtil = domain.diasVidaUtil,
+                imagenUrl = domain.imagenUrl,
+                estado = domain.estado,
+                precioBase = domain.precioBase
+            )
 
-        // Mapear precios
-        productoData.precios = domain.precios.map {
-            PrecioProductoMapper.toData(it, productoData)
-        }.toMutableList()
+        // Mapear precios especiales (solo JM y CR si existen)
+        productoData.preciosEspeciales =
+            domain.preciosEspeciales
+                .filter { it.key == TipoTarifa.PRECIO_JM || it.key == TipoTarifa.PRECIO_CR }
+                .map { (tarifa, precio) ->
+                    PrecioEspecialData(
+                        producto = productoData,
+                        tipoTarifa = tarifa,
+                        precio = precio
+                    )
+                }
+                .toMutableList()
 
         return productoData
     }

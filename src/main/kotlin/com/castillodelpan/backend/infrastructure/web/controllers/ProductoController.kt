@@ -82,34 +82,41 @@ class ProductoController(
         @PathVariable id: Int,
         @Valid @RequestBody dto: ActualizarProductoDTO
     ): ResponseEntity<ProductoResponseDTO> {
-
         val categoria = categoriaRepository.findById(dto.idCategoria)
             ?: throw IllegalArgumentException("Categoría no encontrada")
-
         val unidadMedida = unidadMedidaRepository.findById(dto.idUnidad)
             ?: throw IllegalArgumentException("Unidad de medida no encontrada")
-
+        // Crear mapa de precios especiales
+        val preciosEspeciales =
+            mutableMapOf<com.castillodelpan.backend.domain.models.enums.TipoTarifa, java.math.BigDecimal>()
+        dto.precioJM?.let {
+            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.PRECIO_JM] =
+                it
+        }
+        dto.precioCR?.let {
+            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.PRECIO_CR] =
+                it
+        }
         val productoActualizado = actualizarProductoUseCase(
             id,
-            CrearProductoDTO(
+            com.castillodelpan.backend.domain.models.producto.Producto(
+                idProducto = id,
                 codigo = dto.codigo,
                 nombre = dto.nombre,
                 descripcion = dto.descripcion,
-                idCategoria = dto.idCategoria,
-                idUnidad = dto.idUnidad,
+                categoria = categoria,
+                unidadMedida = unidadMedida,
                 stockActual = 0, // No se actualiza por aquí
                 stockMinimo = dto.stockMinimo,
                 stockMaximo = dto.stockMaximo,
                 requiereLote = dto.requiereLote,
                 diasVidaUtil = dto.diasVidaUtil,
                 imagenUrl = dto.imagenUrl,
-                precios = dto.precios
-            ).toDomain(categoria, unidadMedida).copy(
-                idProducto = id,
-                estado = dto.estado
+                estado = dto.estado,
+                precioBase = dto.precioBase,
+                preciosEspeciales = preciosEspeciales
             )
         )
-
         return ResponseEntity.ok(ProductoResponseDTO.fromDomain(productoActualizado))
     }
 

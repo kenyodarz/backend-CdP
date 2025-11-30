@@ -3,7 +3,6 @@ package com.castillodelpan.backend.infrastructure.persistence.repositories.impl
 import com.castillodelpan.backend.domain.models.enums.EstadoProducto
 import com.castillodelpan.backend.domain.models.producto.Producto
 import com.castillodelpan.backend.domain.repositories.ProductoRepository
-import com.castillodelpan.backend.infrastructure.persistence.mappers.PrecioProductoMapper
 import com.castillodelpan.backend.infrastructure.persistence.mappers.ProductoMapper
 import com.castillodelpan.backend.infrastructure.persistence.repositories.JpaCategoriaRepository
 import com.castillodelpan.backend.infrastructure.persistence.repositories.JpaPrecioProductoRepository
@@ -61,19 +60,10 @@ class ProductoRepositoryImpl(
     override fun save(producto: Producto): Producto {
         val categoriaData = jpaCategoriaRepository.findById(producto.categoria.idCategoria!!)
             .orElseThrow { IllegalArgumentException("Categoría no encontrada") }
-
         val unidadData = jpaUnidadMedidaRepository.findById(producto.unidadMedida.idUnidad!!)
             .orElseThrow { IllegalArgumentException("Unidad de medida no encontrada") }
-
         val productoData = ProductoMapper.toData(producto, categoriaData, unidadData)
         val savedData = jpaProductoRepository.save(productoData)
-
-        // Guardar precios
-        producto.precios.forEach { precio ->
-            val precioData = PrecioProductoMapper.toData(precio, savedData)
-            jpaPrecioProductoRepository.save(precioData)
-        }
-
         return ProductoMapper.toDomain(savedData)
     }
 

@@ -26,54 +26,52 @@ data class ProductoData(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_producto")
     var idProducto: Int? = null,
-
-    @Column(unique = true, length = 50)
-    var codigo: String? = null,
-
-    @Column(nullable = false, length = 200)
-    @NotBlank
-    var nombre: String,
-
-    @Column(columnDefinition = "TEXT")
-    var descripcion: String? = null,
-
+    @Column(unique = true, length = 50) var codigo: String? = null,
+    @Column(nullable = false, length = 200) @NotBlank var nombre: String,
+    @Column(columnDefinition = "TEXT") var descripcion: String? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)
     var categoria: CategoriaData,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_unidad", nullable = false)
     var unidadMedida: UnidadMedidaData,
-
-    @Column(name = "stock_actual", nullable = false)
-    var stockActual: Int = 0,
-
-    @Column(name = "stock_minimo", nullable = false)
-    var stockMinimo: Int = 5,
-
-    @Column(name = "stock_maximo")
-    var stockMaximo: Int? = null,
-
-    @Column(name = "requiere_lote", nullable = false)
-    var requiereLote: Boolean = false,
-
-    @Column(name = "dias_vida_util")
-    var diasVidaUtil: Int? = null,
-
-    @Column(name = "imagen_url", length = 255)
-    var imagenUrl: String? = null,
-
+    @Column(name = "stock_actual", nullable = false) var stockActual: Int = 0,
+    @Column(name = "stock_minimo", nullable = false) var stockMinimo: Int = 5,
+    @Column(name = "stock_maximo") var stockMaximo: Int? = null,
+    @Column(name = "requiere_lote", nullable = false) var requiereLote: Boolean = false,
+    @Column(name = "dias_vida_util") var diasVidaUtil: Int? = null,
+    @Column(name = "imagen_url", length = 255) var imagenUrl: String? = null,
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     var estado: EstadoProducto = EstadoProducto.ACTIVO,
 
-    @OneToMany(mappedBy = "producto", cascade = [CascadeType.ALL], orphanRemoval = true)
+    // Precio base del producto (precio completo sin descuento)
+    @Column(name = "precio_base", nullable = false, precision = 10, scale = 2)
+    var precioBase: BigDecimal = BigDecimal.ZERO,
+
+    // Precios especiales opcionales (solo para JM y CR)
+    @OneToMany(
+        mappedBy = "producto",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
     @JsonIgnore
-    var precios: MutableList<PrecioProductoData> = mutableListOf()
+    var preciosEspeciales: MutableList<PrecioEspecialData> = mutableListOf()
 ) : EntidadAuditable() {
 
+    /**
+     * Obtiene el precio según el tipo de tarifa Si existe precio especial, lo usa; si no, calcula
+     * automáticamente
+     */
     fun getPrecioPorTarifa(tarifa: TipoTarifa): BigDecimal {
-        return precios.firstOrNull { it.tipoTarifa == tarifa }?.precio ?: BigDecimal.ZERO
+        // Buscar precio especial
+        preciosEspeciales.firstOrNull { it.tipoTarifa == tarifa }?.let {
+            return it.precio
+        }
+
+        // Calcular automáticamente desde precio base
+        return tarifa.calcularPrecio(precioBase)
     }
 
     fun tieneStockDisponible(cantidad: Int): Boolean {
