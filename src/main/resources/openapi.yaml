@@ -1,0 +1,740 @@
+openapi: 3.0.3
+info:
+  title: El Castillo del Pan - API
+  description: |
+    API REST para el sistema de gestión de El Castillo del Pan.
+    
+    **Modelo de Precios V2 (Simplificado)**:
+    - Cada producto tiene un `precioBase` (precio completo sin descuento)
+    - Los precios con descuento se calculan automáticamente:
+      - 0D: 0% descuento (precio base)
+      - 10D: 10% descuento
+      - 5D: 5% descuento
+      - ES: 15% descuento
+    - Precios especiales opcionales (JM, CR) se almacenan solo si difieren del base
+  version: 2.0.0
+  contact:
+    name: El Castillo del Pan
+    email: contacto@castillodelpan.com
+
+servers:
+  - url: http://localhost:8080/api
+    description: Servidor de desarrollo local
+  - url: https://api.castillodelpan.com
+    description: Servidor de producción
+
+tags:
+  - name: Productos
+    description: Gestión de productos
+  - name: Clientes
+    description: Gestión de clientes
+  - name: Órdenes
+    description: Gestión de órdenes de despacho
+  - name: Inventario
+    description: Gestión de inventario y lotes
+  - name: Usuarios
+    description: Autenticación y gestión de usuarios
+
+paths:
+  # ============================================
+  # PRODUCTOS
+  # ============================================
+  
+  /productos:
+    get:
+      tags: [ Productos ]
+      summary: Listar productos activos
+      description: Obtiene todos los productos con estado ACTIVO
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductoSimple'
+    
+    post:
+      tags: [ Productos ]
+      summary: Crear producto
+      description: Crea un nuevo producto con precio base y precios especiales opcionales
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearProductoDTO'
+            examples:
+              productoBasico:
+                summary: Producto con solo precio base
+                value:
+                  nombre: "Pan Francés"
+                  idCategoria: 1
+                  idUnidad: 2
+                  precioBase: 10000
+                  stockMinimo: 10
+              productoConEspeciales:
+                summary: Producto con precios especiales
+                value:
+                  nombre: "Hamburguesa X10"
+                  idCategoria: 2
+                  idUnidad: 1
+                  precioBase: 6600
+                  precioJM: 5500
+                  precioCR: 6000
+                  stockMinimo: 5
+      responses:
+        '201':
+          description: Producto creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /productos/{id}:
+    get:
+      tags: [ Productos ]
+      summary: Obtener producto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoResponse'
+              example:
+                idProducto: 1
+                codigo: "PAN001"
+                nombre: "Pan Francés"
+                precioBase: 10000
+                precios:
+                  PRECIO_0D: 10000
+                  PRECIO_10D: 9000
+                  PRECIO_5D: 9500
+                  PRECIO_ES: 8500
+                  PRECIO_JM: 10000
+                  PRECIO_CR: 10000
+                stockActual: 50
+                stockMinimo: 10
+                stockBajo: false
+        '404':
+          description: Producto no encontrado
+    
+    put:
+      tags: [ Productos ]
+      summary: Actualizar producto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarProductoDTO'
+      responses:
+        '200':
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoResponse'
+
+  /productos/buscar:
+    get:
+      tags: [ Productos ]
+      summary: Buscar productos por nombre
+      parameters:
+        - name: nombre
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Productos encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductoSimple'
+
+  /productos/stock-bajo:
+    get:
+      tags: [ Productos ]
+      summary: Productos con stock bajo
+      responses:
+        '200':
+          description: Lista de productos con stock bajo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductoSimple'
+
+  /productos/{id}/ajustar-stock:
+    patch:
+      tags: [ Productos ]
+      summary: Ajustar stock de producto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AjustarStockDTO'
+      responses:
+        '200':
+          description: Stock ajustado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoResponse'
+
+  # ============================================
+  # CLIENTES
+  # ============================================
+  
+  /clientes:
+    get:
+      tags: [ Clientes ]
+      summary: Listar clientes activos
+      responses:
+        '200':
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClienteResponse'
+    
+    post:
+      tags: [ Clientes ]
+      summary: Crear cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearClienteDTO'
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+
+  /clientes/{id}:
+    get:
+      tags: [ Clientes ]
+      summary: Obtener cliente por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClienteResponse'
+
+  # ============================================
+  # ÓRDENES
+  # ============================================
+  
+  /ordenes:
+    get:
+      tags: [ Órdenes ]
+      summary: Listar órdenes
+      parameters:
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [ PENDIENTE, EN_PREPARACION, LISTA, DESPACHADA, ENTREGADA, CANCELADA ]
+        - name: fechaDesde
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: fechaHasta
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de órdenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrdenResponse'
+    
+    post:
+      tags: [ Órdenes ]
+      summary: Crear orden
+      description: |
+        Crea una nueva orden de despacho. Los precios se calculan automáticamente
+        según la tarifa del cliente:
+        - Cliente con tarifa 0D: usa precio base
+        - Cliente con tarifa 10D: aplica 10% descuento
+        - Cliente con tarifa JM: usa precio especial JM si existe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearOrdenDTO'
+      responses:
+        '201':
+          description: Orden creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenResponse'
+
+  /ordenes/{id}:
+    get:
+      tags: [ Órdenes ]
+      summary: Obtener orden por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Orden encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdenResponse'
+
+# ============================================
+# COMPONENTES
+# ============================================
+
+components:
+  schemas:
+    # ============================================
+    # PRODUCTO SCHEMAS
+    # ============================================
+    
+    CrearProductoDTO:
+      type: object
+      required:
+        - nombre
+        - idCategoria
+        - idUnidad
+        - precioBase
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+          example: "PAN001"
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Pan Francés"
+        descripcion:
+          type: string
+          maxLength: 1000
+        idCategoria:
+          type: integer
+          example: 1
+        idUnidad:
+          type: integer
+          example: 2
+        stockActual:
+          type: integer
+          minimum: 0
+          default: 0
+        stockMinimo:
+          type: integer
+          minimum: 0
+          default: 5
+        stockMaximo:
+          type: integer
+          minimum: 0
+        requiereLote:
+          type: boolean
+          default: false
+        diasVidaUtil:
+          type: integer
+          minimum: 1
+        imagenUrl:
+          type: string
+          maxLength: 255
+        precioBase:
+          type: number
+          format: decimal
+          description: Precio base del producto (precio completo sin descuento)
+          example: 10000
+        precioJM:
+          type: number
+          format: decimal
+          description: Precio especial para tarifa JM (opcional)
+          example: 8500
+        precioCR:
+          type: number
+          format: decimal
+          description: Precio especial para tarifa CR (opcional)
+          example: 9000
+
+    ActualizarProductoDTO:
+      type: object
+      required:
+        - nombre
+        - idCategoria
+        - idUnidad
+        - stockMinimo
+        - requiereLote
+        - estado
+        - precioBase
+      properties:
+        codigo:
+          type: string
+          maxLength: 50
+        nombre:
+          type: string
+          maxLength: 200
+        descripcion:
+          type: string
+        idCategoria:
+          type: integer
+        idUnidad:
+          type: integer
+        stockMinimo:
+          type: integer
+        stockMaximo:
+          type: integer
+        requiereLote:
+          type: boolean
+        diasVidaUtil:
+          type: integer
+        imagenUrl:
+          type: string
+        estado:
+          type: string
+          enum: [ ACTIVO, INACTIVO, DESCONTINUADO ]
+        precioBase:
+          type: number
+          format: decimal
+        precioJM:
+          type: number
+          format: decimal
+        precioCR:
+          type: number
+          format: decimal
+
+    ProductoResponse:
+      type: object
+      properties:
+        idProducto:
+          type: integer
+        codigo:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        categoria:
+          $ref: '#/components/schemas/CategoriaSimple'
+        unidadMedida:
+          $ref: '#/components/schemas/UnidadMedidaSimple'
+        stockActual:
+          type: integer
+        stockMinimo:
+          type: integer
+        stockMaximo:
+          type: integer
+        requiereLote:
+          type: boolean
+        diasVidaUtil:
+          type: integer
+        imagenUrl:
+          type: string
+        estado:
+          type: string
+          enum: [ ACTIVO, INACTIVO, DESCONTINUADO ]
+        stockBajo:
+          type: boolean
+        precioBase:
+          type: number
+          format: decimal
+          description: Precio base del producto
+        precios:
+          type: object
+          description: Todos los precios (calculados automáticamente + especiales)
+          additionalProperties:
+            type: number
+            format: decimal
+          example:
+            PRECIO_0D: 10000
+            PRECIO_10D: 9000
+            PRECIO_5D: 9500
+            PRECIO_ES: 8500
+            PRECIO_JM: 8500
+            PRECIO_CR: 10000
+
+    ProductoSimple:
+      type: object
+      properties:
+        idProducto:
+          type: integer
+        codigo:
+          type: string
+        nombre:
+          type: string
+        stockActual:
+          type: integer
+        precioBase:
+          type: number
+          format: decimal
+        categoria:
+          type: string
+        unidad:
+          type: string
+
+    AjustarStockDTO:
+      type: object
+      required:
+        - nuevaCantidad
+        - motivo
+      properties:
+        nuevaCantidad:
+          type: integer
+        motivo:
+          type: string
+
+    # ============================================
+    # CLIENTE SCHEMAS
+    # ============================================
+    
+    CrearClienteDTO:
+      type: object
+      required:
+        - nombre
+        - tipoTarifa
+      properties:
+        nombre:
+          type: string
+          maxLength: 200
+        codigo:
+          type: string
+          maxLength: 50
+        tipoDocumento:
+          type: string
+          enum: [ NIT, CC, CE, PASAPORTE ]
+        numeroDocumento:
+          type: string
+        direccion:
+          type: string
+        telefono:
+          type: string
+        barrio:
+          type: string
+        comuna:
+          type: string
+        tipoNegocio:
+          type: string
+        tipoTarifa:
+          type: string
+          enum: [ '0D', '10D', '5D', ES, JM, CR ]
+          description: Tipo de tarifa que determina el precio aplicado
+        idRuta:
+          type: integer
+        idConductor:
+          type: integer
+        horarioEntrega:
+          type: string
+
+    ClienteResponse:
+      type: object
+      properties:
+        idCliente:
+          type: integer
+        nombre:
+          type: string
+        codigo:
+          type: string
+        tipoDocumento:
+          type: string
+        numeroDocumento:
+          type: string
+        direccion:
+          type: string
+        telefono:
+          type: string
+        barrio:
+          type: string
+        tipoTarifa:
+          type: string
+          enum: [ '0D', '10D', '5D', ES, JM, CR ]
+        ruta:
+          type: string
+        conductor:
+          type: string
+        estado:
+          type: string
+
+    # ============================================
+    # ORDEN SCHEMAS
+    # ============================================
+    
+    CrearOrdenDTO:
+      type: object
+      required:
+        - idCliente
+        - detalles
+      properties:
+        idCliente:
+          type: integer
+        fechaEntregaProgramada:
+          type: string
+          format: date
+        observaciones:
+          type: string
+        detalles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleOrdenDTO'
+
+    DetalleOrdenDTO:
+      type: object
+      required:
+        - idProducto
+        - cantidad
+      properties:
+        idProducto:
+          type: integer
+        cantidad:
+          type: integer
+          minimum: 1
+
+    OrdenResponse:
+      type: object
+      properties:
+        idOrden:
+          type: integer
+        numeroOrden:
+          type: string
+        cliente:
+          type: string
+        fechaOrden:
+          type: string
+          format: date
+        fechaEntregaProgramada:
+          type: string
+          format: date
+        subtotal:
+          type: number
+          format: decimal
+        descuento:
+          type: number
+          format: decimal
+        total:
+          type: number
+          format: decimal
+        estado:
+          type: string
+          enum: [ PENDIENTE, EN_PREPARACION, LISTA, DESPACHADA, ENTREGADA, CANCELADA ]
+        detalles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleOrdenResponse'
+
+    DetalleOrdenResponse:
+      type: object
+      properties:
+        idDetalle:
+          type: integer
+        producto:
+          type: string
+        cantidad:
+          type: integer
+        precioUnitario:
+          type: number
+          format: decimal
+          description: Precio aplicado según la tarifa del cliente
+        subtotal:
+          type: number
+          format: decimal
+
+    # ============================================
+    # SCHEMAS AUXILIARES
+    # ============================================
+    
+    CategoriaSimple:
+      type: object
+      properties:
+        idCategoria:
+          type: integer
+        nombre:
+          type: string
+
+    UnidadMedidaSimple:
+      type: object
+      properties:
+        idUnidad:
+          type: integer
+        nombre:
+          type: string
+        abreviatura:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: [ ]
