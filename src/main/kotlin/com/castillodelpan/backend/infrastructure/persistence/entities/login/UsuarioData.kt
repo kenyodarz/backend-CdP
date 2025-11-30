@@ -27,7 +27,7 @@ data class UsuarioData(
     var idUsuario: Int? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_empleado", nullable = false)
+    @JoinColumn(name = "id_empleado", nullable = false, unique = true)
     var empleado: EmpleadoData,
 
     @Column(nullable = false, unique = true, length = 50)

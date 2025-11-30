@@ -1,4 +1,14 @@
 -- ============================================
+-- SCHEMA V2 - Modelo de Precios Simplificado
+-- ============================================
+-- Cambios principales:
+-- 1. Agregado campo precio_base a tabla productos
+-- 2. Reemplazada tabla precios_producto por precios_especiales
+-- 3. precios_especiales solo almacena JM y CR (precios manuales)
+-- 4. Los demás precios (0D, 10D, 5D, ES) se calculan automáticamente
+-- ============================================
+
+-- ============================================
 -- EXTENSIONES
 -- ============================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -75,36 +85,41 @@ CREATE TABLE carros
 );
 
 -- ============================================
--- PRODUCTOS
+-- PRODUCTOS (MODELO SIMPLIFICADO V2)
 -- ============================================
 
 CREATE TABLE productos
 (
     id_producto    SERIAL PRIMARY KEY,
     codigo         VARCHAR(50) UNIQUE,
-    nombre         VARCHAR(200) NOT NULL,
+    nombre        VARCHAR(200)   NOT NULL,
     descripcion    TEXT,
-    id_categoria   INTEGER      NOT NULL REFERENCES categorias (id_categoria),
-    id_unidad      INTEGER      NOT NULL REFERENCES unidades_medida (id_unidad),
-    stock_actual   INTEGER         DEFAULT 0,
-    stock_minimo   INTEGER         DEFAULT 5,
+    id_categoria  INTEGER        NOT NULL REFERENCES categorias (id_categoria),
+    id_unidad     INTEGER        NOT NULL REFERENCES unidades_medida (id_unidad),
+    stock_actual  INTEGER                 DEFAULT 0,
+    stock_minimo  INTEGER                 DEFAULT 5,
     stock_maximo   INTEGER,
-    requiere_lote  BOOLEAN         DEFAULT FALSE,
+    requiere_lote BOOLEAN                 DEFAULT FALSE,
     dias_vida_util INTEGER,
     imagen_url     VARCHAR(255),
-    estado         estado_producto DEFAULT 'ACTIVO',
-    created_at     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+    estado        estado_producto         DEFAULT 'ACTIVO',
+    -- NUEVO: Precio base del producto (precio completo sin descuento)
+    precio_base   DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP               DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP               DEFAULT CURRENT_TIMESTAMP
 );
 
--- Precios por tipo de cliente
-CREATE TABLE precios_producto
+-- Precios especiales (solo para JM y CR que no siguen la regla de descuento)
+-- Los precios 0D, 10D, 5D, ES se calculan automáticamente desde precio_base
+CREATE TABLE precios_especiales
 (
-    id_precio   SERIAL PRIMARY KEY,
-    id_producto INTEGER        NOT NULL REFERENCES productos (id_producto) ON DELETE CASCADE,
-    tipo_tarifa tipo_tarifa    NOT NULL,
-    precio      DECIMAL(10, 2) NOT NULL DEFAULT 0,
-    UNIQUE (id_producto, tipo_tarifa)
+    id_precio_especial SERIAL PRIMARY KEY,
+    id_producto        INTEGER        NOT NULL REFERENCES productos (id_producto) ON DELETE CASCADE,
+    tipo_tarifa        tipo_tarifa    NOT NULL,
+    precio             DECIMAL(10, 2) NOT NULL,
+    UNIQUE (id_producto, tipo_tarifa),
+    -- Solo permitir JM y CR en esta tabla
+    CHECK (tipo_tarifa IN ('JM', 'CR'))
 );
 
 -- ============================================
@@ -271,6 +286,9 @@ CREATE INDEX idx_productos_nombre ON productos (nombre);
 CREATE INDEX idx_productos_codigo ON productos (codigo);
 CREATE INDEX idx_productos_categoria ON productos (id_categoria);
 CREATE INDEX idx_productos_stock ON productos (stock_actual);
+CREATE INDEX idx_productos_precio_base ON productos (precio_base);
+
+CREATE INDEX idx_precios_especiales_producto ON precios_especiales (id_producto);
 
 CREATE INDEX idx_clientes_nombre ON clientes (nombre);
 CREATE INDEX idx_clientes_documento ON clientes (numero_documento);
@@ -327,7 +345,7 @@ CREATE TRIGGER update_ordenes_updated_at
 EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- VISTAS ÚTILES
+-- VISTAS ÚTILES (ACTUALIZADAS PARA V2)
 -- ============================================
 
 -- Vista de productos con stock bajo
@@ -337,6 +355,7 @@ SELECT p.id_producto,
        p.nombre,
        p.stock_actual,
        p.stock_minimo,
+       p.precio_base,
        c.nombre as categoria
 FROM productos p
          INNER JOIN categorias c ON p.id_categoria = c.id_categoria
@@ -358,19 +377,17 @@ WHERE l.fecha_vencimiento <= CURRENT_DATE + INTERVAL '3 days'
   AND l.estado = 'ACTIVO'
 ORDER BY l.fecha_vencimiento;
 
--- Vista de inventario valorizado
+-- Vista de inventario valorizado (ACTUALIZADA)
 CREATE VIEW v_inventario_valorizado AS
 SELECT p.id_producto,
        p.codigo,
        p.nombre,
        p.stock_actual,
-       pr.precio                    as precio_base,
-       (p.stock_actual * pr.precio) as valor_total,
-       c.nombre                     as categoria
+       p.precio_base,
+       (p.stock_actual * p.precio_base) as valor_total,
+       c.nombre                         as categoria
 FROM productos p
          INNER JOIN categorias c ON p.id_categoria = c.id_categoria
-         LEFT JOIN precios_producto pr ON p.id_producto = pr.id_producto
-    AND pr.tipo_tarifa = '0D'
 WHERE p.estado = 'ACTIVO'
 ORDER BY valor_total DESC;
 
@@ -398,9 +415,25 @@ GROUP BY o.id_orden, o.numero_orden, o.fecha_orden, c.nombre,
 -- COMENTARIOS
 -- ============================================
 
-COMMENT ON DATABASE db_castillo_pan IS 'Base de datos sistema El Castillo del Pan';
-COMMENT ON TABLE productos IS 'Catálogo de productos de la panadería';
+COMMENT ON DATABASE db_castillo_pan IS 'Base de datos sistema El Castillo del Pan - V2 con modelo de precios simplificado';
+COMMENT ON TABLE productos IS 'Catálogo de productos con precio base. Los precios con descuento se calculan automáticamente.';
+COMMENT ON TABLE precios_especiales IS 'Precios especiales solo para tarifas JM y CR que no siguen la regla de descuento automático';
 COMMENT ON TABLE clientes IS 'Clientes con información de rutas y tarifas';
 COMMENT ON TABLE ordenes_despacho IS 'Órdenes de despacho (reemplazan proformas)';
 COMMENT ON TABLE movimientos_inventario IS 'Historial completo de movimientos de inventario';
 COMMENT ON TABLE devoluciones IS 'Productos devueltos por los carros';
+
+-- ============================================
+-- NOTAS DE MIGRACIÓN
+-- ============================================
+
+-- Para migrar desde schema v1 (con tabla precios_producto):
+-- 1. Ejecutar migration-pricing-model.sql
+-- 2. Verificar que todos los productos tengan precio_base
+-- 3. Verificar que precios_especiales solo contenga JM y CR
+-- 4. Eliminar tabla precios_producto antigua
+INSERT INTO categorias (nombre, descripcion, created_at, updated_at, estado)
+VALUES ('PAN', 'Productos de panadería', now(), now(), 'ACTIVO'),
+       ('PASTELES', 'Pastelería y repostería', now(), now(), 'ACTIVO'),
+       ('GALLETAS', 'Galletas y productos secos', now(), now(), 'ACTIVO')
+ON CONFLICT (nombre) DO NOTHING;
