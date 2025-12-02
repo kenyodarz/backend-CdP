@@ -422,23 +422,3 @@ COMMENT ON TABLE clientes IS 'Clientes con información de rutas y tarifas';
 COMMENT ON TABLE ordenes_despacho IS 'Órdenes de despacho (reemplazan proformas)';
 COMMENT ON TABLE movimientos_inventario IS 'Historial completo de movimientos de inventario';
 COMMENT ON TABLE devoluciones IS 'Productos devueltos por los carros';
-
--- ============================================
--- NOTAS DE MIGRACIÓN
--- ============================================
-
--- Para migrar desde schema v1 (con tabla precios_producto):
--- 1. Ejecutar migration-pricing-model.sql
--- 2. Verificar que todos los productos tengan precio_base
--- 3. Verificar que precios_especiales solo contenga JM y CR
--- 4. Eliminar tabla precios_producto antigua
-INSERT INTO categorias (nombre, descripcion, created_at, updated_at, estado)
-VALUES ('PAN', 'Productos de panadería', now(), now(), 'ACTIVO'),
-       ('PASTELES', 'Pastelería y repostería', now(), now(), 'ACTIVO'),
-       ('GALLETAS', 'Galletas y productos secos', now(), now(), 'ACTIVO')
-ON CONFLICT (nombre) DO NOTHING;
-
-INSERT INTO conductores (id_conductor, numero_documento, nombres, apellidos, telefono, licencia,
-                         estado, created_at)
-VALUES (1, '1234567890', 'Migracion', 'Migracion', null, null, DEFAULT, DEFAULT)
-ON CONFLICT (id_conductor) DO NOTHING;

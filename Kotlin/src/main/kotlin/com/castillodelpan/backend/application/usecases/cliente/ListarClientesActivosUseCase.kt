@@ -15,6 +15,6 @@ class ListarClientesActivosUseCase(
     private val clienteRepository: ClienteRepository
 ) {
     operator fun invoke(): List<Cliente> {
-        return clienteRepository.findByEstado(EstadoGeneral.ACTIVO)
+        return clienteRepository.findByEstadoActivo()
     }
 }

@@ -42,6 +42,16 @@ class ProductoRepositoryImpl(
             .map { ProductoMapper.toDomain(it) }
     }
 
+    override fun findProductosActivos(): List<Producto> {
+        return jpaProductoRepository.findProductosActivos()
+            .map { ProductoMapper.toDomain(it) }
+    }
+
+    override fun findProductosInactivos(): List<Producto> {
+        return jpaProductoRepository.findProductosInactivos()
+            .map { ProductoMapper.toDomain(it) }
+    }
+
     override fun findByCategoria(idCategoria: Int): List<Producto> {
         return jpaProductoRepository.findByCategoria(idCategoria)
             .map { ProductoMapper.toDomain(it) }

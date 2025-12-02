@@ -1,6 +1,5 @@
 package com.castillodelpan.backend.application.usecases.producto
 
-import com.castillodelpan.backend.domain.models.enums.EstadoProducto
 import com.castillodelpan.backend.domain.models.producto.Producto
 import com.castillodelpan.backend.domain.repositories.ProductoRepository
 import org.springframework.stereotype.Service
@@ -15,6 +14,6 @@ class ListarProductosActivosUseCase(
     private val productoRepository: ProductoRepository
 ) {
     operator fun invoke(): List<Producto> {
-        return productoRepository.findByEstado(EstadoProducto.ACTIVO)
+        return productoRepository.findProductosActivos()
     }
 }

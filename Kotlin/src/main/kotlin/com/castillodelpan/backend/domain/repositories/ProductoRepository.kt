@@ -12,6 +12,8 @@ interface ProductoRepository {
     fun findByCodigo(codigo: String): Producto?
     fun findAll(): List<Producto>
     fun findByEstado(estado: EstadoProducto): List<Producto>
+    fun findProductosActivos(): List<Producto>
+    fun findProductosInactivos(): List<Producto>
     fun findByCategoria(idCategoria: Int): List<Producto>
     fun findByNombreContaining(nombre: String): List<Producto>
     fun findProductosConStockBajo(): List<Producto>
