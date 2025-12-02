@@ -21,7 +21,7 @@ class ReporteInventarioValorizadoUseCase(
         val productos = productoRepository.findAll()
 
         val items = productos.map { producto ->
-            val precio = producto.getPrecioPorTarifa(TipoTarifa.PRECIO_0D)
+            val precio = producto.getPrecioPorTarifa(TipoTarifa.`0D`)
             val valorTotal = precio.multiply(BigDecimal(producto.stockActual))
 
             ItemInventario(

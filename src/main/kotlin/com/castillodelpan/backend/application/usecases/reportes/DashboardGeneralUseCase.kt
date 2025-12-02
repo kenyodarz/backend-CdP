@@ -1,6 +1,5 @@
 package com.castillodelpan.backend.application.usecases.reportes
 
-import com.castillodelpan.backend.domain.models.enums.EstadoGeneral
 import com.castillodelpan.backend.domain.models.enums.EstadoOrden
 import com.castillodelpan.backend.domain.models.reportes.DashboardData
 import com.castillodelpan.backend.domain.repositories.ClienteRepository
@@ -40,7 +39,7 @@ class DashboardGeneralUseCase(
         val totalProductos = productoRepository.findAll().size
 
         // Clientes activos
-        val clientesActivos = clienteRepository.findByEstado(EstadoGeneral.ACTIVO).size
+        val clientesActivos = clienteRepository.findByEstadoActivo().size
 
         return DashboardData(
             fecha = hoy,

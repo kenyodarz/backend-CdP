@@ -90,11 +90,11 @@ class ProductoController(
         val preciosEspeciales =
             mutableMapOf<com.castillodelpan.backend.domain.models.enums.TipoTarifa, java.math.BigDecimal>()
         dto.precioJM?.let {
-            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.PRECIO_JM] =
+            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.JM] =
                 it
         }
         dto.precioCR?.let {
-            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.PRECIO_CR] =
+            preciosEspeciales[com.castillodelpan.backend.domain.models.enums.TipoTarifa.CR] =
                 it
         }
         val productoActualizado = actualizarProductoUseCase(

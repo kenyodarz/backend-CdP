@@ -24,6 +24,12 @@ interface JpaClienteRepository : JpaRepository<ClienteData, Int> {
     )
     fun findByEstado(@Param("estado") estado: EstadoGeneral): List<ClienteData>
 
+    @Query("SELECT c FROM ClienteData c WHERE c.estado = 'ACTIVO' ORDER BY c.nombre")
+    fun findByEstadoActivo(): List<ClienteData>
+
+    @Query("SELECT c FROM ClienteData c WHERE c.estado = 'INACTIVO' ORDER BY c.nombre")
+    fun findByEstadoInactivo(): List<ClienteData>
+
     @Query(
         """
         SELECT c FROM ClienteData c 

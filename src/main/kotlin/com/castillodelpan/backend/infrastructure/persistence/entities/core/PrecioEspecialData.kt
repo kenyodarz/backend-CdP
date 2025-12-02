@@ -1,11 +1,11 @@
 package com.castillodelpan.backend.infrastructure.persistence.entities.core
 
 import com.castillodelpan.backend.domain.models.enums.TipoTarifa
-import com.castillodelpan.backend.infrastructure.persistence.converters.TipoTarifaConverter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -34,8 +34,8 @@ data class PrecioEspecialData(
     @JoinColumn(name = "id_producto", nullable = false)
     @JsonIgnore
     var producto: ProductoData,
-    @Convert(converter = TipoTarifaConverter::class)
-    @Column(name = "tipo_tarifa", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_tarifa", columnDefinition = "tipo_tarifa", nullable = false)
     var tipoTarifa: TipoTarifa,
     @Column(nullable = false, precision = 10, scale = 2)
     var precio: BigDecimal = BigDecimal.ZERO

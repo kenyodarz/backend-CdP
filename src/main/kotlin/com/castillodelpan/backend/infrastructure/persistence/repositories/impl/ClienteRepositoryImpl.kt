@@ -44,6 +44,16 @@ class ClienteRepositoryImpl(
         return jpaClienteRepository.findByEstado(estado).map { ClienteMapper.toDomain(it) }
     }
 
+    override fun findByEstadoActivo(): List<Cliente> {
+        return jpaClienteRepository.findByEstadoActivo().map { ClienteMapper.toDomain(it) }
+
+    }
+
+    override fun findByEstadoInactivo(): List<Cliente> {
+        return jpaClienteRepository.findByEstadoInactivo().map { ClienteMapper.toDomain(it) }
+
+    }
+
     override fun findByRuta(idRuta: Int): List<Cliente> {
         return jpaClienteRepository.findByRuta(idRuta).map { ClienteMapper.toDomain(it) }
     }

@@ -27,7 +27,7 @@ data class ProductoSimpleDTO(
                 stockActual = producto.stockActual,
                 stockMinimo = producto.stockMinimo,
                 stockBajo = producto.stockBajo,
-                precio0D = producto.getPrecioPorTarifa(TipoTarifa.PRECIO_0D),
+                precio0D = producto.getPrecioPorTarifa(TipoTarifa.`0D`),
                 estado = producto.estado
             )
         }

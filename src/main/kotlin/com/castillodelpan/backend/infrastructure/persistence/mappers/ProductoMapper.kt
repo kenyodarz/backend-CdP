@@ -57,7 +57,7 @@ object ProductoMapper {
         // Mapear precios especiales (solo JM y CR si existen)
         productoData.preciosEspeciales =
             domain.preciosEspeciales
-                .filter { it.key == TipoTarifa.PRECIO_JM || it.key == TipoTarifa.PRECIO_CR }
+                .filter { it.key == TipoTarifa.JM || it.key == TipoTarifa.CR }
                 .map { (tarifa, precio) ->
                     PrecioEspecialData(
                         producto = productoData,

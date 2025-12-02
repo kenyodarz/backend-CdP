@@ -12,6 +12,8 @@ interface ClienteRepository {
     fun findByNumeroDocumento(numeroDocumento: String): Cliente?
     fun findAll(): List<Cliente>
     fun findByEstado(estado: EstadoGeneral): List<Cliente>
+    fun findByEstadoActivo(): List<Cliente>
+    fun findByEstadoInactivo(): List<Cliente>
     fun findByRuta(idRuta: Int): List<Cliente>
     fun findByBarrio(barrio: String): List<Cliente>
     fun findByNombreContaining(nombre: String): List<Cliente>

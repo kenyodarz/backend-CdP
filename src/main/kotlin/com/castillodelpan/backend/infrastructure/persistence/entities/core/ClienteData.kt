@@ -3,10 +3,7 @@ package com.castillodelpan.backend.infrastructure.persistence.entities.core
 import com.castillodelpan.backend.domain.models.enums.EstadoGeneral
 import com.castillodelpan.backend.domain.models.enums.TipoDocumento
 import com.castillodelpan.backend.domain.models.enums.TipoTarifa
-import com.castillodelpan.backend.infrastructure.persistence.converters.EstadoGeneralConverter
-import com.castillodelpan.backend.infrastructure.persistence.converters.TipoTarifaConverter
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -29,7 +26,7 @@ data class ClienteData(
 
     @Column(nullable = false, length = 200)
     @NotBlank
-    var nombre: String,
+    var nombre: String = "",
 
     @Column(unique = true, length = 50)
     var codigo: String? = null,
@@ -56,9 +53,9 @@ data class ClienteData(
     @Column(name = "tipo_negocio", length = 100)
     var tipoNegocio: String? = null,
 
-    @Convert(converter = TipoTarifaConverter::class)
-    @Column(name = "tipo_tarifa", length = 20)
-    var tipoTarifa: TipoTarifa = TipoTarifa.PRECIO_0D,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_tarifa", columnDefinition = "tipo_tarifa", nullable = false)
+    var tipoTarifa: TipoTarifa = TipoTarifa.`0D`,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ruta")
@@ -71,6 +68,8 @@ data class ClienteData(
     @Column(name = "horario_entrega", length = 50)
     var horarioEntrega: String? = null,
 
-    @Convert(converter = EstadoGeneralConverter::class)
+    // AQUÍ ESTABA TU ERROR - esto es lo que debes cambiar
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", columnDefinition = "estado_general", nullable = false)
     var estado: EstadoGeneral = EstadoGeneral.ACTIVO
 ) : EntidadAuditable()

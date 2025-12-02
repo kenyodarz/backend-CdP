@@ -73,15 +73,15 @@ http://localhost:8080/api/productos
   "diasVidaUtil": 3,
   "precios": [
     {
-      "tipoTarifa": "PRECIO_0D",
+      "tipoTarifa": "`0D`",
       "precio": 3500.00
     },
     {
-      "tipoTarifa": "PRECIO_10D",
+      "tipoTarifa": "`10D`",
       "precio": 3150.00
     },
     {
-      "tipoTarifa": "PRECIO_5D",
+      "tipoTarifa": "`5D`",
       "precio": 3325.00
     }
   ]
@@ -116,17 +116,17 @@ http://localhost:8080/api/productos
   "precios": [
     {
       "idPrecio": 1,
-      "tipoTarifa": "PRECIO_0D",
+      "tipoTarifa": "`0D`",
       "precio": 3500.00
     },
     {
       "idPrecio": 2,
-      "tipoTarifa": "PRECIO_10D",
+      "tipoTarifa": "`10D`",
       "precio": 3150.00
     },
     {
       "idPrecio": 3,
-      "tipoTarifa": "PRECIO_5D",
+      "tipoTarifa": "`5D`",
       "precio": 3325.00
     }
   ]
@@ -230,7 +230,7 @@ http://localhost:8080/api/clientes
   "barrio": "Centro",
   "comuna": "1",
   "tipoNegocio": "Tienda de Barrio",
-  "tipoTarifa": "PRECIO_10D",
+  "tipoTarifa": "`10D`",
   "idRuta": 1,
   "idConductor": 1,
   "horarioEntrega": "7:00 AM - 8:00 AM",

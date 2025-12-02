@@ -54,8 +54,8 @@ data class CrearProductoDTO(
     fun toDomain(categoria: Categoria, unidadMedida: UnidadMedida): Producto {
         // Crear mapa de precios especiales solo si se proporcionaron
         val preciosEspeciales = mutableMapOf<TipoTarifa, BigDecimal>()
-        precioJM?.let { preciosEspeciales[TipoTarifa.PRECIO_JM] = it }
-        precioCR?.let { preciosEspeciales[TipoTarifa.PRECIO_CR] = it }
+        precioJM?.let { preciosEspeciales[TipoTarifa.JM] = it }
+        precioCR?.let { preciosEspeciales[TipoTarifa.CR] = it }
 
         return Producto(
             idProducto = null,
