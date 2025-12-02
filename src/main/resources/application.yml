@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/db_castillo_pan
     username: postgres
-    password: ${PASSWORD}
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
     # Pool de conexiones (HikariCP)
@@ -21,7 +21,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update  # Opciones: none, validate, update, create, create-drop
+      ddl-auto: none  # Opciones: none, validate, update, create, create-drop
     show-sql: true
     properties:
       hibernate:

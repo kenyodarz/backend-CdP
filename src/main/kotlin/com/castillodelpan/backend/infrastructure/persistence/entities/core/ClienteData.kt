@@ -3,7 +3,10 @@ package com.castillodelpan.backend.infrastructure.persistence.entities.core
 import com.castillodelpan.backend.domain.models.enums.EstadoGeneral
 import com.castillodelpan.backend.domain.models.enums.TipoDocumento
 import com.castillodelpan.backend.domain.models.enums.TipoTarifa
+import com.castillodelpan.backend.infrastructure.persistence.converters.EstadoGeneralConverter
+import com.castillodelpan.backend.infrastructure.persistence.converters.TipoTarifaConverter
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -53,7 +56,7 @@ data class ClienteData(
     @Column(name = "tipo_negocio", length = 100)
     var tipoNegocio: String? = null,
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = TipoTarifaConverter::class)
     @Column(name = "tipo_tarifa", length = 20)
     var tipoTarifa: TipoTarifa = TipoTarifa.PRECIO_0D,
 
@@ -68,6 +71,6 @@ data class ClienteData(
     @Column(name = "horario_entrega", length = 50)
     var horarioEntrega: String? = null,
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = EstadoGeneralConverter::class)
     var estado: EstadoGeneral = EstadoGeneral.ACTIVO
 ) : EntidadAuditable()

@@ -19,58 +19,52 @@ class ClienteRepositoryImpl(
 ) : ClienteRepository {
 
     override fun findById(id: Int): Cliente? {
-        return jpaClienteRepository.findById(id)
-            .map { ClienteMapper.toDomain(it) }
-            .orElse(null)
+        return jpaClienteRepository.findById(id).map { ClienteMapper.toDomain(it) }.orElse(null)
     }
 
     override fun findByCodigo(codigo: String): Cliente? {
-        return jpaClienteRepository.findByCodigo(codigo)
+        return jpaClienteRepository
+            .findByCodigo(codigo)
             .map { ClienteMapper.toDomain(it) }
             .orElse(null)
     }
 
     override fun findByNumeroDocumento(numeroDocumento: String): Cliente? {
-        return jpaClienteRepository.findByNumeroDocumento(numeroDocumento)
+        return jpaClienteRepository
+            .findByNumeroDocumento(numeroDocumento)
             .map { ClienteMapper.toDomain(it) }
             .orElse(null)
     }
 
     override fun findAll(): List<Cliente> {
-        return jpaClienteRepository.findAll()
-            .map { ClienteMapper.toDomain(it) }
+        return jpaClienteRepository.findAll().map { ClienteMapper.toDomain(it) }
     }
 
     override fun findByEstado(estado: EstadoGeneral): List<Cliente> {
-        return jpaClienteRepository.findByEstado(estado)
-            .map { ClienteMapper.toDomain(it) }
+        return jpaClienteRepository.findByEstado(estado).map { ClienteMapper.toDomain(it) }
     }
 
     override fun findByRuta(idRuta: Int): List<Cliente> {
-        return jpaClienteRepository.findByRuta(idRuta)
-            .map { ClienteMapper.toDomain(it) }
+        return jpaClienteRepository.findByRuta(idRuta).map { ClienteMapper.toDomain(it) }
     }
 
     override fun findByBarrio(barrio: String): List<Cliente> {
-        return jpaClienteRepository.findByBarrio(barrio)
-            .map { ClienteMapper.toDomain(it) }
+        return jpaClienteRepository.findByBarrio(barrio).map { ClienteMapper.toDomain(it) }
     }
 
     override fun findByNombreContaining(nombre: String): List<Cliente> {
-        return jpaClienteRepository.findByNombreContainingIgnoreCase(nombre)
-            .map { ClienteMapper.toDomain(it) }
+        return jpaClienteRepository.findByNombreContainingIgnoreCase(nombre).map {
+            ClienteMapper.toDomain(it)
+        }
     }
 
     override fun save(cliente: Cliente): Cliente {
-        val rutaData = cliente.ruta?.let {
-            jpaRutaRepository.findById(it.idRuta!!)
-                .orElse(null)
-        }
+        val rutaData = cliente.ruta?.let { jpaRutaRepository.findById(it.idRuta!!).orElse(null) }
 
-        val conductorData = cliente.conductor?.let {
-            jpaConductorRepository.findById(it.idConductor!!)
-                .orElse(null)
-        }
+        val conductorData =
+            cliente.conductor?.let {
+                jpaConductorRepository.findById(it.idConductor!!).orElse(null)
+            }
 
         val clienteData = ClienteMapper.toData(cliente, rutaData, conductorData)
         val savedData = jpaClienteRepository.save(clienteData)

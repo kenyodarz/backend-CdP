@@ -130,18 +130,18 @@ CREATE TABLE clientes
 (
     id_cliente       SERIAL PRIMARY KEY,
     nombre           VARCHAR(200) NOT NULL,
-    codigo           VARCHAR(50) UNIQUE,
+    codigo          VARCHAR(50),
     tipo_documento   tipo_documento,
     numero_documento VARCHAR(20),
     direccion        TEXT,
-    telefono         VARCHAR(20),
+    telefono        VARCHAR,
     barrio           VARCHAR(100),
     comuna           VARCHAR(50),
     tipo_negocio     VARCHAR(100),
     tipo_tarifa      tipo_tarifa    DEFAULT '0D',
     id_ruta          INTEGER REFERENCES rutas (id_ruta),
     id_conductor     INTEGER REFERENCES conductores (id_conductor),
-    horario_entrega  VARCHAR(50),
+    horario_entrega VARCHAR,
     estado           estado_general DEFAULT 'ACTIVO',
     created_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP      DEFAULT CURRENT_TIMESTAMP
@@ -204,7 +204,7 @@ CREATE TABLE empleados
 CREATE TABLE usuarios
 (
     id_usuario    SERIAL PRIMARY KEY,
-    id_empleado   INTEGER      NOT NULL REFERENCES empleados (id_empleado),
+    id_empleado INTEGER NOT NULL REFERENCES empleados (id_empleado) UNIQUE,
     username      VARCHAR(50)  NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     rol           rol_usuario  NOT NULL,
@@ -437,3 +437,8 @@ VALUES ('PAN', 'Productos de panadería', now(), now(), 'ACTIVO'),
        ('PASTELES', 'Pastelería y repostería', now(), now(), 'ACTIVO'),
        ('GALLETAS', 'Galletas y productos secos', now(), now(), 'ACTIVO')
 ON CONFLICT (nombre) DO NOTHING;
+
+INSERT INTO conductores (id_conductor, numero_documento, nombres, apellidos, telefono, licencia,
+                         estado, created_at)
+VALUES (1, '1234567890', 'Migracion', 'Migracion', null, null, DEFAULT, DEFAULT)
+ON CONFLICT (id_conductor) DO NOTHING;

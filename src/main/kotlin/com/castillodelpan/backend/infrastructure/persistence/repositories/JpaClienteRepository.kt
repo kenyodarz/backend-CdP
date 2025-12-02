@@ -28,7 +28,7 @@ interface JpaClienteRepository : JpaRepository<ClienteData, Int> {
         """
         SELECT c FROM ClienteData c 
         WHERE c.ruta.idRuta = :idRuta 
-        AND c.estado = 'ACTIVO'
+        AND c.estado = com.castillodelpan.backend.domain.models.enums.EstadoGeneral.ACTIVO
         ORDER BY c.nombre
     """
     )
@@ -38,7 +38,7 @@ interface JpaClienteRepository : JpaRepository<ClienteData, Int> {
         """
         SELECT c FROM ClienteData c 
         WHERE c.barrio = :barrio 
-        AND c.estado = 'ACTIVO'
+        AND c.estado = com.castillodelpan.backend.domain.models.enums.EstadoGeneral.ACTIVO
         ORDER BY c.nombre
     """
     )
